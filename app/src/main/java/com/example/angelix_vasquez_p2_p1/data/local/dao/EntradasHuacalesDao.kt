@@ -5,12 +5,11 @@ import com.example.angelix_vasquez_p2_p1.data.local.entities.EntradasHuacalesEnt
 import kotlinx.coroutines.flow.Flow
 
 @Dao
-interface EntradasHuacalesDao {
+interface EntradasDao {
+    @Query("SELECT * FROM EntradasHuacales ORDER BY idEntrada DESC")
+    fun getAll(): kotlinx.coroutines.flow.Flow<List<EntradasHuacalesEntity>>
 
-    @Query("SELECT * FROM EntradasHuacales")
-    fun getAll(): Flow<List<EntradasHuacalesEntity>>
-
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert
     suspend fun insert(entrada: EntradasHuacalesEntity)
 
     @Update
