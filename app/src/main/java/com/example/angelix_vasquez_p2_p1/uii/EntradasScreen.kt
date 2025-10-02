@@ -1,106 +1,160 @@
 package com.example.angelix_vasquez_p2_p1.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import com.example.angelix_vasquez_p2_p1.data.local.entities.EntradasHuacalesEntity
 import com.example.angelix_vasquez_p2_p1.viewmodel.EntradasHuacalesViewModel
-import java.text.DecimalFormat
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EntradasScreen(
     viewModel: EntradasHuacalesViewModel,
+    onNuevaEntrada: () -> Unit,
     onEdit: (EntradasHuacalesEntity) -> Unit
 ) {
     val state by viewModel.uiState.collectAsState()
 
-    val totalCantidad = state.entradas.sumOf { it.cantidad }
-    val totalDinero = state.entradas.sumOf { (it.cantidad * it.precio).toDouble() }
-
-    val formatoMoneda = DecimalFormat("#,###.00")
-    val totalDineroFormateado = "RD$ ${formatoMoneda.format(totalDinero)}"
-
     Scaffold(
-        floatingActionButton = {
-            Column(horizontalAlignment = Alignment.End) {
-                FloatingActionButton(
-                    onClick = {
-                        onEdit(
-                            EntradasHuacalesEntity(
-                                idEntrada = 0,
-                                fecha = "",
-                                nombreCliente = "",
-                                cantidad = 0,
-                                precio = 0.0
-                            )
-                        )
-                    }
-                ) {
-                    Icon(imageVector = Icons.Default.Add, contentDescription = "Nueva entrada")
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = {
+                    Text(
+                        text = "Entradas de Huacales",
+                        fontWeight = FontWeight.Bold
+                    )
                 }
-
-                // Franja de totales debajo del botón
+            )
+        }
+    ) { innerPadding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
+            Column(modifier = Modifier.fillMaxSize()) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 8.dp)
-                        .background(Color.LightGray)
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                        .padding(8.dp)
+                        .background(Color(0xFFE0E0E0), RoundedCornerShape(12.dp))
+                        .padding(12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Filtros", style = MaterialTheme.typography.bodyMedium)
+                    Icon(Icons.Default.FilterList, contentDescription = "Filtros")
+                }
+
+                LazyColumn(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(8.dp)
+                ) {
+                    items(state.entradas) { entrada ->
+                        EntradaItem(
+                            entrada = entrada,
+                            onClick = { onEdit(entrada) }
+                        )
+                    }
+                }
+            }
+
+            Column(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.End
+            ) {
+                FloatingActionButton(
+                    onClick = { onNuevaEntrada() },
+                    modifier = Modifier
+                        .padding(end = 16.dp, bottom = 8.dp),
+                    containerColor = Color(0xFF3F51B5),
+                    contentColor = Color.White
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Nueva entrada")
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            color = Color(0xFFE0E0E0),
+                            shape = RoundedCornerShape(20.dp)
+                        )
+                        .padding(horizontal = 24.dp, vertical = 12.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "$totalCantidad",
-                        style = MaterialTheme.typography.titleLarge,
-                        modifier = Modifier.padding(start = 32.dp) // 👉 más separado del borde
+                        text = state.entradas.sumOf { it.cantidad }.toString(),
+                        style = MaterialTheme.typography.bodyLarge
                     )
                     Text(
-                        text = totalDineroFormateado,
-                        style = MaterialTheme.typography.titleLarge
+                        text = "$${"%,.2f".format(state.entradas.sumOf { it.cantidad * it.precio })}",
+                        style = MaterialTheme.typography.bodyLarge
                     )
                 }
             }
         }
-    ) { padding ->
-        Column(
+    }
+}
+
+@Composable
+fun EntradaItem(
+    entrada: EntradasHuacalesEntity,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 6.dp, horizontal = 4.dp)
+            .clickable { onClick() },
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFFF0F0F0) // gris claro
+        )
+    ) {
+        Row(
             modifier = Modifier
-                .padding(padding)
-                .fillMaxSize()
-                .padding(16.dp)
+                .fillMaxWidth()
+                .padding(14.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text("Entradas de Huacales", style = MaterialTheme.typography.headlineSmall)
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            LazyColumn {
-                items(state.entradas) { entrada ->
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 4.dp),
-                        onClick = { onEdit(entrada) }
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Text("Cliente: ${entrada.nombreCliente}")
-                            Text("Fecha: ${entrada.fecha}")
-                            Text("Cantidad: ${entrada.cantidad}")
-                            Text("Precio: ${entrada.precio}")
-                            Text("Subtotal: ${entrada.cantidad * entrada.precio}")
-                        }
-                    }
-                }
+            Column {
+                Text(text = entrada.nombreCliente, fontWeight = FontWeight.Medium)
+                Text(text = "${entrada.cantidad} x $${"%,.2f".format(entrada.precio)}")
             }
+            Text(
+                text = "$${"%,.2f".format(entrada.cantidad * entrada.precio)}",
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Bold
+            )
         }
     }
 }
